@@ -1,118 +1,152 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import { useEffect, useState } from 'react';
+import { Button, Col, Divider, Input, Row, Steps } from 'antd';
 
-const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+function DistributeCodesPage({ }: {
+}) {
+  const [emailCodes, setEmailCodes] = useState<{ [email: string]: string }>({
+
+  });
+
+  const [emails, setEmails] = useState<string[]>([]);
+
+  const [codesStr, setCodesStr] = useState<string>('');
+  const [codes, setCodes] = useState<string[]>([]);
+  const [subject, setSubject] = useState<string>('BitBadges Code');
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [message, setMessage] = useState<string>('Your code is: CODE');
+
+  useEffect(() => {
+    const emailCodesMap: { [email: string]: string } = {};
+    emails.forEach((email, index) => {
+      if (index >= codes.length) {
+        return;
+      }
+      emailCodesMap[email] = codes[index % codes.length];
+    });
+    setEmailCodes(emailCodesMap);
+  }, [emails, codes]);
+
+  async function handleCodeDistribution() {
+    // Send emails
+    await fetch('/api/send-emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emails.map((email) => {
+        const msg = {
+          to: email,
+          from: 'trevormil@comcast.net', // Replace with your own email address
+          subject: subject,
+          text: message.replace('CODE', emailCodes[email]),
+        };
+        return msg;
+      })),
+    });
+  }
+
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.tsx</code>
+    <div style={{ margin: 20 }}>
+      <div>
+
+        <h1><b>Instructions</b></h1>
+        <br />
+        {/* <Steps
+          current={currentStep}
+          onChange={(step) => {
+            setCurrentStep(step);
+          }}
+          direction="vertical"
+        >
+          <Steps.Step title={<div style={{ color: 'white' }}>{"Select Codes -> Unique Codes -> Fill out distribution details"}</div>} description={<div> 
+            
+          </div>} />
+          <Steps.Step title={<div style={{ color: 'white' }}>{"Select Codes -> Unique Codes -> Fill out the details"}</div>} />
+
+
+
+        </Steps> */}
+        <p>
+          {"1. On bitbadges.io, when selecting a distribution method, select Codes."}
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+        <p>
+          {"2. Fill out the details for your distribution. Make sure to set the number of codes you want to distribute equal to the number of emails."}
+        </p>
+        <p>
+          {"3. Sign and submit the blockchain transaction. Wait until it is confirmed. Fetch all codes from the Claims tab on the collection page."}
+        </p>
+        <p>
+          {"4. Copy and paste your emails into the left box. One per line."}
+        </p>
+        <p>
+          {"5. Copy and paste your codes into the right box. One per line."}
+        </p>
+        <p>
+          {"6. Customize your email subject and message."}
+        </p>
+        <p>
+          {"7. Send your email."}
+        </p>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+      <br />
+
+      <Row style={{ textAlign: 'center' }}>
+        <Col span={12}>
+          <h1><b>Emails</b></h1>
+          <Input.TextArea
+            rows={15}
+            value={emails.join('\n')}
+            onChange={(e) => {
+              setEmails(e.target.value.split('\n'));
+            }}
+          />
+        </Col>
+        <Col span={12}>
+          <h1><b>Codes</b></h1>
+          <Input.TextArea
+            rows={15}
+            value={codesStr}
+            onChange={(e) => {
+              setCodesStr(e.target.value);
+              setCodes(e.target.value.split('\n'));
+            }}
+          />
+        </Col>
+      </Row>
+
+      <Divider />
+      <Row style={{ display: 'flex', flexDirection: 'column' }}>
+        <h1><b>Subject</b></h1>
+        <Input
+          value={subject}
+          onChange={(e) => {
+            setSubject(e.target.value);
+          }}
         />
-      </div>
+      </Row>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      <Divider />
+      <Row style={{ display: 'flex', flexDirection: 'column' }}>
+        <h1><b>Messsage</b></h1>
+        <Input.TextArea
+          rows={10}
+          value={message}
+          onChange={(e) => {
+            setMessage(e.target.value);
+          }}
+        />
+        <p>*We will replace anywhere it says CODE with the respective code.</p>
+      </Row>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+      <Divider />
+      <Row style={{ textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+        <Button onClick={handleCodeDistribution}>Send Emails</Button>
+      </Row>
+    </div >
+  );
 }
+
+
+export default DistributeCodesPage;
